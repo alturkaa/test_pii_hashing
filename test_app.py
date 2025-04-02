@@ -9,10 +9,13 @@ from unidecode import unidecode
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import streamlit as st
+import hmac
 
 st.title("PII Tokenization Testing")
 
 uploaded_file = st.file_uploader("Upload a CSV file with fake data", type="csv")
+
+secret_key = st.text_input("Enter secret key:")
 
 start = time.time()
 
@@ -135,7 +138,8 @@ if uploaded_file is not None:
     def deterministic_tokenize(text):
         if "nan" in text or "NaT" in text or text is None or text == '':
             return "missing"
-        return hashlib.sha256(text.encode()).hexdigest()
+        # return hashlib.sha256(text.encode()).hexdigest()
+        return hmac.new(secret_key.encode(), text.encode(), hashlib.sha256).hexdigest()
 
 
     # Apply Tokenization to PII Columns
@@ -270,14 +274,15 @@ if uploaded_file is not None:
     deidentified_df = df[cols_for_deid]
 
     st.write("### Processed Deidentified Data - click to download")
-    st.write(deidentified_df.head())
+    st.write(deidentified_df)
 
     # df.to_csv('TestOutputFull_v3.csv', index=False)
     # deidentified_df.to_csv('TestDeidentified_v3.csv', index=False)
 
     end = time.time()
 
-    print(f"Execution time: {end - start:.6f} seconds")
+    execution_time = f"Execution time: {end - start:.6f} seconds"
+    st.write(execution_time)
     # when running 8 rows x 13 = 104: 39 seconds
     # when running 8 rows x 13 x 3 = 312: 115 seconds
 
